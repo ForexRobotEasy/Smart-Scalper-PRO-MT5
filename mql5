@@ -1,0 +1,74 @@
+
+// Developer: Forex Robot Easy Team
+// Website: forexroboteasy.com
+// Program name: Smart Scalper PRO MT5
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <Technical\Indicator.mqh>
+
+// Define constants
+#define LOT_SIZE 0.1
+#define STOP_LOSS 20
+#define TAKE_PROFIT 40
+
+// Create an instance of the Trade class
+CTrade trade;
+
+// Define the OnTick event handler
+void OnTick()
+{
+    // Get the current Bid and Ask prices
+    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+    
+    // Calculate the simple moving average
+    double sma = iMA(_Symbol, 0, 14, 0, MODE_SMA, PRICE_CLOSE, 0);
+    
+    // Check if the current Bid price is above the SMA
+    if (bid > sma)
+    {
+        // Open a long position
+        trade.Buy(_Symbol, LOT_SIZE, ask, ask - STOP_LOSS, ask + TAKE_PROFIT, 'SmartScalperPRO_Long');
+    }
+    // Check if the current Bid price is below the SMA
+    else if (bid < sma)
+    {
+        // Open a short position
+        trade.Sell(_Symbol, LOT_SIZE, bid, bid + STOP_LOSS, bid - TAKE_PROFIT, 'SmartScalperPRO_Short');
+    }
+}
+
+// Define the OnDeinit event handler
+void OnDeinit(const int reason)
+{
+    // Close all open positions
+    trade.PositionCloseAll();
+}
+
+// Define the OnInit event handler
+void OnInit()
+{
+    // Enable real-time events
+    EventSetTimer(1);
+}
+
+// Define the OnTimer event handler
+void OnTimer()
+{
+    // Check if the market is closed
+    if (!IsTradeAllowed())
+    {
+        // Close all open positions
+        trade.PositionCloseAll();
+    }
+}
+
+// Define the OnStart event handler
+void OnStart()
+{
+    // Set the initial stop loss and take profit levels
+    trade.SetStopLoss(STOP_LOSS);
+    trade.SetTakeProfit(TAKE_PROFIT);
+}
+
